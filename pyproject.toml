@@ -5,14 +5,18 @@ build-backend = "hatchling.build"
 [project]
 name = "pespila"
 dynamic = ["version"]
-description = "Soccer match outcome prediction using statistical distribution fitting, ensemble methods, and reinforcement learning."
+description = "Probabilistic soccer match prediction — Dixon-Coles, Bradley-Terry, Elo, and distribution-based models with a scikit-learn compatible API."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
     { name = "Michael Wallner" },
 ]
-keywords = ["soccer", "football", "prediction", "statistics", "machine-learning"]
+keywords = [
+    "soccer", "football", "prediction", "statistics", "machine-learning",
+    "poisson", "dixon-coles", "elo", "bradley-terry", "sports-analytics",
+    "betting", "probability", "scikit-learn",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -47,6 +51,8 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/michaelwallner/PesPila-Parabilis"
+Repository = "https://github.com/michaelwallner/PesPila-Parabilis"
+Issues = "https://github.com/michaelwallner/PesPila-Parabilis/issues"
 
 [tool.hatch.version]
 path = "src/pespila/_version.py"
