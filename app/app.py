@@ -10,7 +10,10 @@ st.set_page_config(
 )
 
 st.title("PesPila-Parabilis")
-st.markdown("Soccer match prediction using statistical distribution fitting, ensemble methods, and reinforcement learning.")
+st.markdown(
+    "Soccer match prediction using statistical distribution fitting, "
+    "ensemble methods, and reinforcement learning."
+)
 
 st.markdown("---")
 st.markdown(

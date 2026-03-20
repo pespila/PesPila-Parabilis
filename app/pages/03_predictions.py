@@ -2,12 +2,10 @@
 
 from pathlib import Path
 
-import plotly.express as px
 import streamlit as st
-
-from app.components.league_selector import get_match_dates, league_selector
-from app.utils.cache import get_matches
-from app.utils.formatting import format_date
+from components.league_selector import get_match_dates, league_selector
+from utils.cache import get_matches
+from utils.formatting import format_date
 
 DB_PATH = Path("data/pespila.db")
 

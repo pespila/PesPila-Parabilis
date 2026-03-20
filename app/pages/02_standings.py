@@ -3,11 +3,10 @@
 from pathlib import Path
 
 import streamlit as st
-
-from app.components.league_selector import get_match_dates, league_selector
-from app.components.standings_table import render_standings
-from app.utils.cache import get_standings
-from app.utils.formatting import format_date
+from components.league_selector import get_match_dates, league_selector
+from components.standings_table import render_standings
+from utils.cache import get_standings
+from utils.formatting import format_date
 
 DB_PATH = Path("data/pespila.db")
 
@@ -24,7 +23,7 @@ if league_id and season_id:
             min_value=0,
             max_value=len(dates) - 1,
             value=len(dates) - 1,
-            format=f"Day %d",
+            format="Day %d",
         )
         selected_date = dates[date_idx]
         st.caption(f"Standings as of {format_date(selected_date)}")

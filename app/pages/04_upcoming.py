@@ -2,11 +2,9 @@
 
 from pathlib import Path
 
-import plotly.graph_objects as go
 import streamlit as st
-
-from app.components.league_selector import get_match_dates, league_selector
-from app.utils.formatting import format_date
+from components.league_selector import get_match_dates, league_selector
+from utils.formatting import format_date
 
 DB_PATH = Path("data/pespila.db")
 
@@ -22,7 +20,10 @@ if league_id and season_id:
     dates = get_match_dates(DB_PATH, league_id, season_id)
     if dates:
         st.subheader(f"Next game day: {format_date(dates[-1])}")
-        st.info("Upcoming match predictions will be displayed here after running the prediction pipeline with the selected model.")
+        st.info(
+            "Upcoming match predictions will be displayed here "
+            "after running the prediction pipeline with the selected model."
+        )
 
         # Placeholder for prediction visualization
         st.markdown("---")

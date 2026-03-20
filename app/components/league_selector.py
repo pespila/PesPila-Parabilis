@@ -17,7 +17,10 @@ def league_selector(
 ) -> tuple[int | None, int | None, str | None]:
     """Render country/league/season selectors. Returns (league_id, season_id, season_label)."""
     with DatabaseManager(db_path) as db:
-        countries = db.fetchall("SELECT DISTINCT c.name FROM countries c JOIN leagues l ON c.country_id = l.country_id ORDER BY c.name")
+        countries = db.fetchall(
+            "SELECT DISTINCT c.name FROM countries c "
+            "JOIN leagues l ON c.country_id = l.country_id ORDER BY c.name"
+        )
         country_names = [r["name"] for r in countries]
 
     if not country_names:
