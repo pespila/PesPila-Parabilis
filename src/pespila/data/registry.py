@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 BASE_URL = "https://www.football-data.co.uk/mmz4281"
 
 

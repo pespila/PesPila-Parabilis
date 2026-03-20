@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -94,14 +94,6 @@ class DataPipeline:
     ) -> None:
         """Ingest a single CSV DataFrame into the database."""
         country_id = db.get_or_create_country(league_info.country, league_info.country_code)
-
-        # Determine actual league from Div column or from registry
-        league_code = league_info.league_code
-        if "Div" in df.columns:
-            div_vals = df["Div"].unique().to_list()
-            div_vals = [v for v in div_vals if v and v.strip()]
-            if len(div_vals) == 1 and div_vals[0].strip():
-                league_code = div_vals[0].strip()
 
         league_id = db.get_or_create_league(
             country_id, league_info.league_name, league_info.league_code, league_info.tier
@@ -220,7 +212,9 @@ class DataPipeline:
 
         # Home matches
         home_goals = db.fetchall(
-            f"SELECT {home_col} as goals FROM matches WHERE home_team_id = ? AND league_id = ? AND season_id = ? AND {home_col} IS NOT NULL",
+            f"""SELECT {home_col} as goals FROM matches
+                WHERE home_team_id = ? AND league_id = ? AND season_id = ?
+                AND {home_col} IS NOT NULL""",
             (team_id, league_id, season_id),
         )
         for row in home_goals:
@@ -229,7 +223,9 @@ class DataPipeline:
 
         # Away matches
         away_goals = db.fetchall(
-            f"SELECT {away_col} as goals FROM matches WHERE away_team_id = ? AND league_id = ? AND season_id = ? AND {away_col} IS NOT NULL",
+            f"""SELECT {away_col} as goals FROM matches
+                WHERE away_team_id = ? AND league_id = ? AND season_id = ?
+                AND {away_col} IS NOT NULL""",
             (team_id, league_id, season_id),
         )
         for row in away_goals:
