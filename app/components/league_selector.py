@@ -65,17 +65,17 @@ def league_selector(
     return league_id, season_id, season_label
 
 
-def get_match_dates(
+def get_matchdays(
     db_path: Path,
     league_id: int,
     season_id: int,
-) -> list[str]:
-    """Get distinct match dates for a league/season."""
+) -> list[int]:
+    """Get distinct matchday numbers for a league/season."""
     with DatabaseManager(db_path) as db:
         rows = db.fetchall(
-            """SELECT DISTINCT match_date FROM matches
-               WHERE league_id = ? AND season_id = ? AND match_date IS NOT NULL
-               ORDER BY match_date""",
+            """SELECT DISTINCT matchday FROM matches
+               WHERE league_id = ? AND season_id = ? AND matchday IS NOT NULL
+               ORDER BY matchday""",
             (league_id, season_id),
         )
-    return [r["match_date"] for r in rows]
+    return [r["matchday"] for r in rows]

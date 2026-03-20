@@ -3,8 +3,7 @@
 from pathlib import Path
 
 import streamlit as st
-from components.league_selector import get_match_dates, league_selector
-from utils.formatting import format_date
+from components.league_selector import get_matchdays, league_selector
 
 DB_PATH = Path("data/pespila.db")
 
@@ -17,15 +16,14 @@ league_id, season_id, season_label = league_selector(DB_PATH, key_prefix="up_")
 if league_id and season_id:
     model_name = st.sidebar.selectbox("Algorithm", MODELS, key="up_model")
 
-    dates = get_match_dates(DB_PATH, league_id, season_id)
-    if dates:
-        st.subheader(f"Next game day: {format_date(dates[-1])}")
+    matchdays = get_matchdays(DB_PATH, league_id, season_id)
+    if matchdays:
+        st.subheader(f"Latest: Matchday {matchdays[-1]}")
         st.info(
             "Upcoming match predictions will be displayed here "
             "after running the prediction pipeline with the selected model."
         )
 
-        # Placeholder for prediction visualization
         st.markdown("---")
         st.markdown("### Prediction Format")
         st.markdown("Each match will show:")

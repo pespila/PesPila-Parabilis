@@ -24,8 +24,8 @@ env/
 .DS_Store
 Thumbs.db
 
-# Data
-data/
+# Data (local SQLite databases)
+/data/
 *.db
 
 # Testing
