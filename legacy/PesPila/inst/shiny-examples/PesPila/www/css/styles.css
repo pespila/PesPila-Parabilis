@@ -1,0 +1,22 @@
+#leagueC, #leagueL, #leagueS, #leagueTH, #leagueTA {
+ 	margin: 0px;
+ 	padding: 0px;
+}
+label {
+ 	display: none;
+}
+.form-group, .shiny-input-container {
+	margin: 0px;
+	padding: 0px;
+}
+#homeHTML, #awayHTML, #matchingTable {
+	text-align: left;
+}
+#matchingTable, #matchingTableA {
+	font-size: 14px;
+	font-weight: bold;
+	text-align: center;
+}
+/*.dataTables_paginate {
+	display: none;
+}*/

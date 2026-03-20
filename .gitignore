@@ -1,15 +1,43 @@
-# History files
-.Rhistory
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
 
-# Example code in package build process
-*-Ex.R
+# Virtual environments
+.venv/
+venv/
+env/
 
-# R data files from past sessions
-.Rdata
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# RStudio files
-.Rproj.user/
-.Rproj.user
-
-# Mac files
+# OS
 .DS_Store
+Thumbs.db
+
+# Data
+data/
+*.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type checking
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,8 +1,26 @@
-PesPila-Parabilis
-=================
+# PesPila-Parabilis
 
-A self created model for predicting the outcome of football matches.
-I will provide code which gives you stats for the german Bundesliga.
+Soccer match outcome prediction using statistical distribution fitting, ensemble methods, and reinforcement learning.
 
-Data downloaded from:
-http://www.football-data.co.uk
+## Installation
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Usage
+
+```python
+from pespila.data.pipeline import DataPipeline
+
+# Download and populate database
+pipeline = DataPipeline()
+pipeline.full_refresh()
+```
+
+## Streamlit App
+
+```bash
+pip install -e ".[app]"
+streamlit run app/app.py
+```
