@@ -20,7 +20,7 @@ def render_match_card(
     score = f"{home_goals} - {away_goals}" if home_goals is not None else "vs"
     color = ""
     if correct is not None:
-        color = "background-color: #d4edda;" if correct else "background-color: #f8d7da;"
+        color = "background-color: #1a7a3a; color: #fff;" if correct else "background-color: #a82a2a; color: #fff;"
 
     st.markdown(
         f"""

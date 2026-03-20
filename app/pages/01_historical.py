@@ -134,18 +134,13 @@ if league_id and season_id:
                 col4.metric("ROI", f"{total_pl / (stake * n_total) * 100:+.1f}%" if n_total > 0 else "0%")
 
                 # Styled results table
-                def style_row(row: pd.Series) -> list[str]:
-                    if row["Correct"]:
-                        return ["background-color: #d4edda"] * len(row)
-                    return ["background-color: #f8d7da"] * len(row)
-
                 display_cols = ["Home", "Away", "Score", "Actual", "Predicted",
                                 "P(H)", "P(D)", "P(A)", "B365 Odd", "P/L"]
                 styled = result_df[display_cols].style.apply(
                     lambda row: (
-                        ["background-color: #d4edda"] * len(row)
+                        ["background-color: #1a7a3a; color: #ffffff"] * len(row)
                         if result_df.loc[row.name, "Correct"]
-                        else ["background-color: #f8d7da"] * len(row)
+                        else ["background-color: #a82a2a; color: #ffffff"] * len(row)
                     ),
                     axis=1,
                 ).format({"P/L": "${:+.2f}"})

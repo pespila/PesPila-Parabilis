@@ -16,9 +16,9 @@ def render_standings(df: pd.DataFrame, n_promotion: int = 3, n_relegation: int =
         pos = row["Pos"]
         n_teams = len(df)
         if pos <= n_promotion:
-            return ["background-color: #d4edda"] * len(row)
+            return ["background-color: #1a7a3a; color: #ffffff"] * len(row)
         elif pos > n_teams - n_relegation:
-            return ["background-color: #f8d7da"] * len(row)
+            return ["background-color: #a82a2a; color: #ffffff"] * len(row)
         return [""] * len(row)
 
     styled = df.style.apply(highlight_zones, axis=1).format(
