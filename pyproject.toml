@@ -52,7 +52,7 @@ Homepage = "https://github.com/michaelwallner/PesPila-Parabilis"
 path = "src/pespila/_version.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = ["legacy/", "app/", "tests/", "data/", "*.zip", ".DS_Store"]
+exclude = ["legacy/", "app/", "tests/", "/data/", ".claude/", "*.zip", ".DS_Store", "CLAUDE.md"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pespila"]
