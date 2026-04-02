@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import logging
 from datetime import datetime
@@ -79,12 +80,22 @@ class DataPipeline:
 
         logger.info("Full refresh complete.")
 
+    # Columns we extract from football-data.co.uk CSVs — everything else is ignored.
+    _CSV_COLUMNS = [
+        "Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR",
+        "HTHG", "HTAG", "HTR", "B365H", "B365D", "B365A",
+    ]
+
     def from_local(self, csv_dir: str | Path, compute_matchdays: bool = True) -> None:
         """Ingest CSVs from a local directory of football-data.co.uk files.
 
         Supports two layouts:
         - Flat:   <csv_dir>/<season>_<league>.csv  (e.g. csvs/2324_D1.csv)
         - Nested: <csv_dir>/<season>/<league>.csv   (e.g. csvs/2324/D1.csv)
+
+        Handles ragged rows, trailing commas, BOM markers, variable column
+        counts across eras, and silently skips non-CSV files (e.g. Cloudflare
+        HTML blocks).
         """
         csv_dir = Path(csv_dir)
         if not csv_dir.is_dir():
@@ -119,21 +130,80 @@ class DataPipeline:
 
         with DatabaseManager(self.db_path) as db:
             ingested = 0
+            skipped_html = 0
+            skipped_empty = 0
             for csv_file, season_code, league_code in entries:
                 league_info = league_map.get(league_code)
                 if not league_info:
                     logger.debug("Skipping unknown league code: %s", league_code)
                     continue
-                df = pl.read_csv(str(csv_file), infer_schema_length=0, truncate_ragged_lines=True)
-                if len(df) == 0:
+
+                df = self._read_local_csv(csv_file)
+                if df is None:
+                    skipped_html += 1
                     continue
+                if len(df) == 0:
+                    skipped_empty += 1
+                    continue
+
                 self._ingest_csv(db, league_info, season_code, df)
                 ingested += 1
 
-        logger.info("Ingested %d CSV files from %s", ingested, csv_dir)
+        logger.info(
+            "Ingested %d CSV files from %s (skipped %d HTML, %d empty)",
+            ingested, csv_dir, skipped_html, skipped_empty,
+        )
 
         if compute_matchdays:
             self.compute_all_matchdays()
+
+    def _read_local_csv(self, csv_file: Path) -> pl.DataFrame | None:
+        """Read a single football-data.co.uk CSV into a polars DataFrame.
+
+        Returns None if the file is not a valid CSV (e.g. HTML).
+        Returns an empty DataFrame if the file has no usable match rows.
+        Uses Python csv.DictReader for maximum tolerance of ragged rows,
+        trailing commas, BOM markers, and inconsistent column counts.
+        """
+        # Quick sniff: skip HTML / non-CSV content
+        try:
+            with open(csv_file, "rb") as f:
+                raw = f.read(1024)
+        except OSError:
+            return None
+        # Strip BOM for the sniff check
+        text_start = raw.lstrip(b"\xef\xbb\xbf").lstrip()
+        if text_start.startswith(b"<") or text_start.startswith(b"<!"):
+            logger.debug("Skipping HTML file: %s", csv_file.name)
+            return None
+
+        rows: list[dict[str, str]] = []
+        with open(csv_file, encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f, restval="")
+            if reader.fieldnames is None:
+                return pl.DataFrame()
+
+            # Strip whitespace / BOM from header names
+            reader.fieldnames = [h.strip().strip("\ufeff") for h in reader.fieldnames]
+
+            # Map available columns to the ones we need
+            available = set(reader.fieldnames)
+            target_cols = [c for c in self._CSV_COLUMNS if c in available]
+
+            if "HomeTeam" not in available or "AwayTeam" not in available:
+                logger.debug("Skipping file without HomeTeam/AwayTeam: %s", csv_file.name)
+                return pl.DataFrame()
+
+            for row in reader:
+                # Extract only the columns we care about, default to ""
+                rows.append({col: (row.get(col) or "").strip() for col in target_cols})
+
+        if not rows:
+            return pl.DataFrame()
+
+        # All columns as Utf8 — type conversion happens downstream in _ingest_csv
+        schema = {col: pl.Utf8 for col in target_cols}
+        return pl.DataFrame(rows, schema=schema)
 
     def _seed_seasons(self, db: DatabaseManager) -> None:
         """Pre-populate all season records."""
