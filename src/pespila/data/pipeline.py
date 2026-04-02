@@ -80,22 +80,38 @@ class DataPipeline:
         logger.info("Full refresh complete.")
 
     def from_local(self, csv_dir: str | Path, compute_matchdays: bool = True) -> None:
-        """Ingest CSVs from a local directory mirroring football-data.co.uk layout.
+        """Ingest CSVs from a local directory of football-data.co.uk files.
 
-        Expected structure: <csv_dir>/<season_code>/<league_code>.csv
-        e.g. football_data_csvs/2324/D1.csv
+        Supports two layouts:
+        - Flat:   <csv_dir>/<season>_<league>.csv  (e.g. csvs/2324_D1.csv)
+        - Nested: <csv_dir>/<season>/<league>.csv   (e.g. csvs/2324/D1.csv)
         """
         csv_dir = Path(csv_dir)
         if not csv_dir.is_dir():
             raise FileNotFoundError(f"Directory not found: {csv_dir}")
 
         league_map = {lg.league_code: lg for lg in LEAGUE_REGISTRY}
-        csv_files = sorted(csv_dir.glob("*/*.csv"))
-        if not csv_files:
-            logger.warning("No CSVs found matching <season>/<league>.csv in %s", csv_dir)
+
+        # Collect (csv_path, season_code, league_code) from both layouts
+        entries: list[tuple[Path, str, str]] = []
+
+        # Flat: <season>_<league>.csv
+        for csv_file in csv_dir.glob("*.csv"):
+            parts = csv_file.stem.split("_", 1)
+            if len(parts) == 2:
+                entries.append((csv_file, parts[0], parts[1]))
+
+        # Nested: <season>/<league>.csv
+        for csv_file in csv_dir.glob("*/*.csv"):
+            entries.append((csv_file, csv_file.parent.name, csv_file.stem))
+
+        entries.sort(key=lambda e: e[0].name)
+
+        if not entries:
+            logger.warning("No CSVs found in %s", csv_dir)
             return
 
-        logger.info("Found %d CSV files in %s", len(csv_files), csv_dir)
+        logger.info("Found %d CSV files in %s", len(entries), csv_dir)
 
         with DatabaseManager(self.db_path) as db:
             db.create_schema()
@@ -103,9 +119,7 @@ class DataPipeline:
 
         with DatabaseManager(self.db_path) as db:
             ingested = 0
-            for csv_file in csv_files:
-                season_code = csv_file.parent.name
-                league_code = csv_file.stem
+            for csv_file, season_code, league_code in entries:
                 league_info = league_map.get(league_code)
                 if not league_info:
                     logger.debug("Skipping unknown league code: %s", league_code)
