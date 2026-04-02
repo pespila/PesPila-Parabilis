@@ -438,8 +438,8 @@ class DataPipeline:
     def compute_matchdays(self, league_id: int, season_id: int) -> None:
         """Assign matchday numbers to matches in a league/season.
 
-        Groups matches into rounds of n_teams/2 using date clustering.
-        Matches within a ~4 day window are considered the same matchday.
+        Matches are ordered by date and assigned in consecutive blocks
+        of n_teams/2 (one full round per matchday).
         """
         with DatabaseManager(self.db_path) as db:
             matches = db.fetchall(
@@ -466,23 +466,12 @@ class DataPipeline:
             n_teams = team_count["n"] if team_count else 20
             matches_per_round = max(n_teams // 2, 1)
 
-            # Cluster by date proximity (4-day window)
+            # Matches are already ordered by date.  Every consecutive
+            # block of matches_per_round matches is one matchday.
             matchday = 1
-            round_count = 0
-            prev_date: datetime | None = None
-
-            for m in matches:
-                curr_date = datetime.strptime(m["match_date"], "%Y-%m-%d")
-
-                if prev_date is not None:
-                    gap = (curr_date - prev_date).days
-                    if gap > 4 or round_count >= matches_per_round:
-                        matchday += 1
-                        round_count = 0
-
-                round_count += 1
-                prev_date = curr_date
-
+            for i, m in enumerate(matches):
+                if i > 0 and i % matches_per_round == 0:
+                    matchday += 1
                 db.execute(
                     "UPDATE matches SET matchday = ? WHERE match_id = ?",
                     (matchday, m["match_id"]),
