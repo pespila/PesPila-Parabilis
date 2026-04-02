@@ -13,6 +13,7 @@ import polars as pl
 
 from pespila.data.db import DatabaseManager
 from pespila.data.registry import (
+    LEAGUE_REGISTRY,
     LeagueInfo,
     get_all_seasons,
     season_label,
@@ -77,6 +78,48 @@ class DataPipeline:
                 self._ingest_csv(db, league_info, season_code, df)
 
         logger.info("Full refresh complete.")
+
+    def from_local(self, csv_dir: str | Path, compute_matchdays: bool = True) -> None:
+        """Ingest CSVs from a local directory mirroring football-data.co.uk layout.
+
+        Expected structure: <csv_dir>/<season_code>/<league_code>.csv
+        e.g. football_data_csvs/2324/D1.csv
+        """
+        csv_dir = Path(csv_dir)
+        if not csv_dir.is_dir():
+            raise FileNotFoundError(f"Directory not found: {csv_dir}")
+
+        league_map = {lg.league_code: lg for lg in LEAGUE_REGISTRY}
+        csv_files = sorted(csv_dir.glob("*/*.csv"))
+        if not csv_files:
+            logger.warning("No CSVs found matching <season>/<league>.csv in %s", csv_dir)
+            return
+
+        logger.info("Found %d CSV files in %s", len(csv_files), csv_dir)
+
+        with DatabaseManager(self.db_path) as db:
+            db.create_schema()
+            self._seed_seasons(db)
+
+        with DatabaseManager(self.db_path) as db:
+            ingested = 0
+            for csv_file in csv_files:
+                season_code = csv_file.parent.name
+                league_code = csv_file.stem
+                league_info = league_map.get(league_code)
+                if not league_info:
+                    logger.debug("Skipping unknown league code: %s", league_code)
+                    continue
+                df = pl.read_csv(str(csv_file), infer_schema_length=0, truncate_ragged_lines=True)
+                if len(df) == 0:
+                    continue
+                self._ingest_csv(db, league_info, season_code, df)
+                ingested += 1
+
+        logger.info("Ingested %d CSV files from %s", ingested, csv_dir)
+
+        if compute_matchdays:
+            self.compute_all_matchdays()
 
     def _seed_seasons(self, db: DatabaseManager) -> None:
         """Pre-populate all season records."""
